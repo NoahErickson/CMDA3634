@@ -14,6 +14,7 @@ void mpiPrintBoard(int, int, int,int, int *);
 void updateBoard(int, int, int *, int *);
 int *mpiGameSetup(int, int, int *, int *, int *, FILE *);
 void haloExchange(int, int, int, int, int *);
+int globalSumStateChanges;
 
 int getHowManyRows(int rank, int size, int N) {
   // this function computes the number of rows a process with rank "rank"
@@ -29,7 +30,6 @@ int main(int argc, char **argv) {
   /* Q2 b): use MPI_Init to initialize MPI */
   MPI_Init(&argc, &argv);
   /* Q2 b) code ends here */
-  
   int rank, size;
   /* Q2 c): use MPI_Comm_rank and MPI_Comm_size to get rank and size */
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -76,7 +76,6 @@ int main(int argc, char **argv) {
     }
     /* Q4 f) code ends here */
     updateBoard(Nlocal, M, boardA, boardB);
-    
     /* Q5 c): call mpiPrintBoard to print the local board  */
     if (rank == 0) {
       printf("After %d iterations\n", t);
@@ -86,7 +85,10 @@ int main(int argc, char **argv) {
     
     if (t == T)
       break;
-    
+    if (globalSumStateChanges == 0){
+      printf("You have reached a still-life board, iterations have been stopped\n");
+      break;
+    }
     ++t;
     /* Q4 f): call haloExchange on boardB data */
     if (size!=1){
@@ -94,6 +96,7 @@ int main(int argc, char **argv) {
     }
     /* Q4 f) code ends here */
     updateBoard(Nlocal, M, boardB, boardA);
+    
     /* Q5 c): call mpiPrintBoard to print the local board*/
     if (rank == 0) {
       printf("After %d iterations\n", t);
@@ -318,6 +321,7 @@ void haloExchange(int N, int M, int rank, int size, int *board) {
 // HW02 functions
 void updateBoard(int N, int M, int *oldBoard, int *newBoard) {
   // Update the board
+  int sumStateChanges = 0;
   for (int i = 1; i < N + 1; ++i) { // starting at 1 to skip boundary layer
     for (int j = 1; j < M + 1; ++j) { // starting at 1 to skip boundary layer
       
@@ -368,11 +372,15 @@ void updateBoard(int N, int M, int *oldBoard, int *newBoard) {
           newState = 0;
         }
       }
-      
+      if (oldState != newState)
+	{
+	  sumStateChanges++;
+	}
       // Update new board
       newBoard[cell] = newState;
     }
   }
+  MPI_Allreduce(&sumStateChanges,&globalSumStateChanges,1,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
 }
 void printBoard(int N, int M, int *board) {
   // this is a reference serial version
