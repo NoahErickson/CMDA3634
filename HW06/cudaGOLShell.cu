@@ -238,8 +238,8 @@ t1= omp_get_wtime();
     for (int i = 0;i<numblocks;++i){
     	changes += Hsum[i];
 }
-
-    cudaMemcpy(boardB,DboardB,K*sizeof(int), cudaMemcpyDeviceToHost);
+	//  (***) symbol before comment = commented out for timing
+    // cudaMemcpy(boardB,DboardB,K*sizeof(int), cudaMemcpyDeviceToHost); 
     if (changes == 0){
        printf("Board has reached still-life\n");
        break;
@@ -247,7 +247,7 @@ t1= omp_get_wtime();
 
     //copy for display
    /* Q2: copy DEVICE board A to HOST boardA for display*/
-    cudaMemcpy(boardA, DboardA, K*sizeof(int), cudaMemcpyDeviceToHost);
+    // *** cudaMemcpy(boardA, DboardA, K*sizeof(int), cudaMemcpyDeviceToHost);
 
     // display if the board is small
     ++t;
@@ -273,7 +273,7 @@ t1= omp_get_wtime();
     for (int i = 0;i<numblocks;++i)
     	changes += Hsum[i];
 
-    cudaMemcpy(boardA, DboardA, K*sizeof(int), cudaMemcpyDeviceToHost);
+    // *** cudaMemcpy(boardA, DboardA, K*sizeof(int), cudaMemcpyDeviceToHost);
     if (changes == 0){
        printf("Board has reached still-life\n");
        break;
